@@ -1,0 +1,87 @@
+basePath: /api
+definitions:
+  serializers.Login:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  serializers.Register:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      username:
+        type: string
+    type: object
+host: 127.0.0.1:7890
+info:
+  contact:
+    email: gtb365@163.com
+    name: Tianbao
+    url: https://tianbaoo.github.io/
+  description: gin快速启动脚手架
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://tianbaoo.github.io/
+  title: gin-fast API
+  version: "1.0"
+paths:
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录接口
+      parameters:
+      - description: 请求body中需携带的参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/serializers.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code":200,"msg":"返回成功","data":{"email":"gtb365@163.com","id":93997900482051,"name":"","phone":"15926187015","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDAwNjczMzksImlkIjo5Mzk5NzkwMDQ4MjA1MSwidXNlcm5hbWUiOiJ0aWFuYmFvIn0.luFD6rMu3eYrnvWaIu8uBUiKszFGnkFrf8b9-0djnPc","username":"tianbao"}}'
+          schema:
+            type: string
+        "400":
+          description: '{"code": 400, "msg": "返回错误"}'
+          schema:
+            type: string
+      summary: 用户登录接口
+      tags:
+      - 用户
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: 用户注册接口
+      parameters:
+      - description: 请求body中需携带的参数
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/serializers.Register'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"code": 200, "msg": "返回成功"}'
+          schema:
+            type: string
+        "400":
+          description: '{"code": 400, "msg": "返回错误"}'
+          schema:
+            type: string
+      summary: 用户注册接口
+      tags:
+      - 用户
+swagger: "2.0"
