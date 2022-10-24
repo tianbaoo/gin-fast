@@ -1,7 +1,9 @@
 package logger
 
 import (
+	"bytes"
 	"gin-fast/conf"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -54,14 +56,42 @@ func getLogWriter(filename string, maxSize, maxBackup, maxAge int) zapcore.Write
 	return zapcore.AddSync(lumberJackLogger)
 }
 
+
+type bodyWriter struct {
+	gin.ResponseWriter
+	bodyBuf *bytes.Buffer
+}
+
+func (w bodyWriter) Write(b []byte) (int, error) {
+	//memory copy here!
+	w.bodyBuf.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
+
 // GinLogger 接收gin框架默认的日志
 func GinLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
+
+		var requestBodyBytes []byte
+		if c.Request.Body != nil {
+			requestBodyBytes, _ = ioutil.ReadAll(c.Request.Body)
+		}
+		// ioutil.ReadAll之后必须用ioutil.NopCloser赋值回去
+		c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(requestBodyBytes))
+		var responseBodyWriter bodyWriter
+		//response写缓存
+		responseBodyWriter = bodyWriter{
+			bodyBuf: bytes.NewBufferString(""),
+			ResponseWriter: c.Writer}
+		c.Writer = responseBodyWriter
+
 		c.Next()
 
+		responseBody :=strings.Trim(responseBodyWriter.bodyBuf.String(),"\n")
 		cost := time.Since(start)
 		lg.Info(path,
 			zap.Int("status", c.Writer.Status()),
@@ -72,6 +102,7 @@ func GinLogger() gin.HandlerFunc {
 			zap.String("user-agent", c.Request.UserAgent()),
 			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 			zap.Duration("cost", cost),
+			zap.String("responseBody", responseBody),
 		)
 	}
 }
